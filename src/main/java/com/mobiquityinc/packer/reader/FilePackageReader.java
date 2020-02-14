@@ -5,6 +5,11 @@ import java.util.List;
 
 import com.mobiquityinc.packer.model.Thing;
 
+/**
+ * Reads a file that contains the information
+ * @author ricardo.cortes
+ *
+ */
 public class FilePackageReader {
 
 	public List<Thing> readThings(String filePath){
