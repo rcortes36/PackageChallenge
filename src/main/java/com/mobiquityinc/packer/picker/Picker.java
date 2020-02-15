@@ -1,84 +1,131 @@
 package com.mobiquityinc.packer.picker;
 
 import java.math.BigDecimal;
-import java.util.ArrayDeque;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import lombok.Getter;
 
 import com.mobiquityinc.packer.model.DecisionNode;
 import com.mobiquityinc.packer.model.Thing;
 
 public class Picker {
 	private final Thing thingsArray[];
-	private final List<Thing> selectedThings;
-	private final BigDecimal maxWeight;
+	@Getter
+	private List<Thing> selectedThings;
+	private final BigDecimal boxWeightLimit;
+	@Getter
+	private BigDecimal calculatedCost;
+	public static Comparator<Thing> COMPARE_THING_BY_VALUE_DESC = ((Thing a, Thing b) -> b.getValue()
+			.compareTo(a.getValue()));
 
-	public Picker(List<Thing> thingsList, BigDecimal maxWeight) {
-		// Remove things that weights more than the box capacity
-		thingsArray = thingsList.stream().filter(thing -> thing.getWeight().compareTo(maxWeight) > 0)
-				.toArray(Thing[]::new);
+	public Picker(List<Thing> thingsList, BigDecimal boxWeightLimit) {
+		// Remove things that weights more than the box capacity, then sort it according
+		// with the value
+		thingsArray = thingsList.stream().filter(thing -> thing.getWeight().compareTo(boxWeightLimit) <= 0)
+				.sorted(COMPARE_THING_BY_VALUE_DESC).toArray(Thing[]::new);
 		this.selectedThings = new LinkedList<>();
-		this.maxWeight = maxWeight;
+		this.boxWeightLimit = boxWeightLimit;
 	}
 
-	public BigDecimal calculateMaxNodeProfit(DecisionNode dNode, int n, int W) {
-		BigDecimal currentProfit = dNode.getProfit();
-
-		return currentProfit;
-
-	}
-
-	public BigDecimal pack() {
-		BigDecimal profit = BigDecimal.ZERO;
+	public void pack() {
+		this.calculatedCost = BigDecimal.ZERO;
 		switch (thingsArray.length) {
 		case 0:
-			// selectedThings already is an empty list and profit is Zero
+			// selectedThings already is an empty list and calculatedCost is Zero
 			break;
 		case 1:
-			profit = thingsArray[0].getCost();
+			// If there is just one thing, put it it the box, weight restriction already
+			// checked during the reading
+			this.calculatedCost = thingsArray[0].getCost();
 			selectedThings.add(thingsArray[0]);
 			break;
 		default:
-			profit = packNonTrivial();
+			this.calculatedCost = packNonTrivial();
 			break;
+		}
+	}
+
+	private BigDecimal packNonTrivial() {
+		BigDecimal profit = BigDecimal.ZERO;
+		int totalThings = this.thingsArray.length;
+		Queue<DecisionNode> queue = new LinkedList<DecisionNode>();
+		DecisionNode headNode = new DecisionNode();
+
+		// Values for the first level
+		headNode.setLevel(-1);
+		headNode.setProfit(BigDecimal.ZERO);
+		headNode.setWeight(BigDecimal.ZERO);
+		headNode.setBound(BigDecimal.ZERO);
+		// Head or most valuable thing is the first that will be evaluated
+		queue.add(headNode);
+
+		while (!queue.isEmpty()) {
+			DecisionNode node = queue.remove();
+			if (node.getLevel() < totalThings - 1) {
+				Thing nextThing = this.thingsArray[node.getLevel() + 1];
+				DecisionNode includeNode = new DecisionNode();
+				includeNode.addThings(node.getSelectedThings());
+				includeNode.addThing(nextThing);
+				includeNode.setLevel(node.getLevel() + 1);
+				includeNode.setWeight(node.getWeight().add(nextThing.getWeight()));
+				includeNode.setProfit(node.getProfit().add(nextThing.getCost()));
+				includeNode.setBound(calculateMaxNodeProfit(includeNode));
+
+				// Are room for the new group of things and new thing has value?
+				if ((includeNode.getWeight().compareTo(this.boxWeightLimit) <= 0)
+						&& includeNode.getBound().compareTo(profit) >= 0) {
+					if (profit.compareTo(includeNode.getProfit()) < 0) {
+						profit = includeNode.getProfit();
+						selectedThings = includeNode.getSelectedThings();
+					}
+					// This node is valuable to keep for evaluate
+					queue.offer(includeNode);
+				}
+
+				DecisionNode excludeNode = new DecisionNode();
+				excludeNode.setLevel(node.getLevel() + 1);
+				excludeNode.setWeight(node.getWeight());
+				excludeNode.setProfit(node.getProfit());
+				excludeNode.setSelectedThings(node.getSelectedThings());
+				BigDecimal possibleNewProfitIfOut = calculateMaxNodeProfit(excludeNode);
+				excludeNode.setBound(possibleNewProfitIfOut);
+				if (possibleNewProfitIfOut.compareTo(profit) > 0) {
+					// This node is valuable to keep for evaluate
+					queue.offer(excludeNode);
+				}
+			}
 		}
 		return profit;
 	}
 
-	public BigDecimal packNonTrivial() {
-		BigDecimal profit = BigDecimal.ZERO;
-		int totalThings = thingsArray.length;
-		Queue<DecisionNode> queue = new ArrayDeque<>(thingsArray.length);
-		// Head node with the most valuable thing
-		Thing firstThing = thingsArray[0];
-		DecisionNode headNode = new DecisionNode(firstThing);
-		int currentLevel = -1;
+	private boolean fits(BigDecimal currentWeight, BigDecimal thingWeight) {
+		return this.boxWeightLimit.compareTo(currentWeight.add(thingWeight)) >= 0;
 
-		// Values for the first level
-		headNode.setLevel(currentLevel);
-		headNode.setProfit(BigDecimal.ZERO);
-		headNode.setWeight(BigDecimal.ZERO);
-		// Head or most valuable thing is the first that will be evaluated
-		queue.add(headNode);
+	}
 
-		for (DecisionNode node : queue) {
-			if (currentLevel < totalThings - 1) {
-				Thing currentThing = node.getThing();
-				currentLevel++;
-				Thing nextThing = thingsArray[currentLevel];
-				DecisionNode nextNode = new DecisionNode(nextThing);
-				nextNode.setLevel(currentLevel);
-				nextNode.setWeight(node.getWeight().add(currentThing.getWeight()));
-				nextNode.setProfit(node.getProfit().add(currentThing.getCost()));
+	private BigDecimal calculateMaxNodeProfit(DecisionNode dNode) {
+		BigDecimal currentProfit = dNode.getProfit();
+		// Accumulated weight until now
+		BigDecimal currentWeight = dNode.getWeight();
 
-				//Are room for the next thing and has value? 
-				if ((nextNode.getWeight().compareTo(maxWeight) < 0) && nextNode.getProfit().compareTo(profit) > 0) {
-					profit = nextNode.getProfit();
-				}
-				
+		// start index to including following things
+		for (int i = dNode.getLevel() + 1; i < this.thingsArray.length; i++) {
+			Thing t = this.thingsArray[i];
+			if (fits(currentWeight, t.getWeight())) {
+				currentWeight = currentWeight.add(t.getWeight());
+				currentProfit = currentProfit.add(t.getCost());
+			} else {
+				// How much room are
+				BigDecimal remainder = this.boxWeightLimit.subtract(currentWeight);
+				// Fill the theoretical cost than can be added if the thing were divisible
+				currentProfit = currentProfit.add(remainder.multiply(t.getValue()));
+				// end the loop
+				break;
 			}
 		}
-		return profit;
+		return currentProfit;
 	}
 }

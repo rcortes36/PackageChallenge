@@ -14,14 +14,7 @@ public class FilePackageReader {
 
 	public List<Thing> readThings(String filePath){
 		List<Thing> result = new LinkedList<>();
-		return sortDescendingThingByValue(result);
-	}
-	
-	public static List<Thing> sortDescendingThingByValue(List<Thing> list) {
-		list.sort((Thing a, Thing b) -> b.getValue().compareTo(a.getValue()));
-		return list;
-	}
-	
-	
-	
+		//Check weight > = 0, Cost > 0, not duplicates ids
+		return result;
+	}	
 }
