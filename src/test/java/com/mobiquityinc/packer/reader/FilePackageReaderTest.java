@@ -5,33 +5,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
+import com.mobiquityinc.packer.io.FilePackageReader;
+import com.mobiquityinc.packer.io.exception.FilePackageReaderException;
+
 class FilePackageReaderTest {
 	@Test
 	void testPackEmptyList() {
 		FilePackageReader reader = new FilePackageReader();
 		assertDoesNotThrow(() -> reader.readThings("src/test/resources/Input.txt"));
-		
 	}
 	
 	@Test
-	void testPackInvalidPackageWeight() {
+	void testlackCurrencySimbol() {
 		FilePackageReader reader = new FilePackageReader();
-		assertThrows(FilePackageReaderException.class, () -> reader.readThings("src/test/resources/InvalidInputPackageWeight.txt"));
+		assertThrows(FilePackageReaderException.class,() -> reader.readThings("src/test/resources/InvalidInputThingNoEuro.txt"));
 	}
 	
 	@Test
-	void testPackInvalidThingWeight() {
+	void testIncorrectSpace() {
 		FilePackageReader reader = new FilePackageReader();
-		assertThrows(FilePackageReaderException.class, () -> reader.readThings("src/test/resources/InvalidInputThingWeight.txt"));
+		assertThrows(FilePackageReaderException.class,() -> reader.readThings("src/test/resources/InvalidInputThingSpaces.txt"));
 	}
-	
-	@Test
-	void testPackInvalidThingCost() {
-		FilePackageReader reader = new FilePackageReader();
-		assertThrows(FilePackageReaderException.class, () -> reader.readThings("src/test/resources/InvalidInputThingCost.txt"));
-	}
-
-	
-	
 }
 

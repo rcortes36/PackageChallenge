@@ -1,4 +1,4 @@
-package com.mobiquityinc.packer.reader;
+package com.mobiquityinc.packer.io;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -11,21 +11,19 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
+import com.mobiquityinc.packer.io.exception.FilePackageReaderException;
 import com.mobiquityinc.packer.model.PackageInformation;
 import com.mobiquityinc.packer.model.Thing;
 
 /**
- * Reads a file that contains the information
+ * Reads a file that contains the information and transform it into Objects
+ * inside the application Also, checks for format errors in the file
  * 
  * @author ricardo.cortes
  *
  */
 public class FilePackageReader {
-	private static final BigDecimal MAX_PACKAGE_WEIGHT = new BigDecimal("100");
-	private static final BigDecimal MAX_WEIGHT_THINGS = new BigDecimal("100");
-	private static final BigDecimal MAX_COST_THINGS = new BigDecimal("100");
-	
-	public static final int MAX_NUMBER_THINGS = 15;
+	private int INITIAL_CAPACITY = 15;
 
 	public List<PackageInformation> readThings(String filePath) throws FilePackageReaderException {
 		List<PackageInformation> packagesToPack = new LinkedList<>();
@@ -38,40 +36,27 @@ public class FilePackageReader {
 			inputLines = br.lines().collect(Collectors.toList());
 			int lineNumber = 0;
 			for (String ln : inputLines) {
-				lineNumber++;
-				// Divide exactly by one space
-				String tokens[] = ln.split(" ");
-				String packageWeighString = tokens[0];
+				if (!ln.trim().isEmpty()) {
+					lineNumber++;
+					// Divide exactly by one space
+					String tokens[] = ln.split(" ");
+					String packageWeighString = tokens[0];
 
-				try {
-					BigDecimal packageWeight = new BigDecimal(packageWeighString);
-					if (packageWeight.compareTo(MAX_PACKAGE_WEIGHT) > 0) {
-						throw new FilePackageReaderException(
-								"Error reading the file: " + filePath + " invalid package weight: " + packageWeighString
-										+ " > MAXIMUM ALLOWED WEIGHT(" + MAX_PACKAGE_WEIGHT + ") line:" + lineNumber);
-					}
-					List<Thing> thingsInLine = new ArrayList<>(MAX_NUMBER_THINGS);
-					for (int i = 2; i < tokens.length; i++) {
-						Thing t = parseThing(tokens[i], filePath, i);
-						if(t.getWeight().compareTo(MAX_WEIGHT_THINGS) > 0) {
-							throw new FilePackageReaderException(
-									"Error reading the file: " + filePath + " invalid thing weight: " + t.getWeight()
-											+ " > MAXIMUM ALLOWED WEIGHT(" + MAX_WEIGHT_THINGS + ") line:" + lineNumber);
-						}
-						if(t.getCost().compareTo(MAX_COST_THINGS) > 0) {
-							throw new FilePackageReaderException(
-									"Error reading the file: " + filePath + " invalid thing cost: " + t.getCost()
-											+ " > MAXIMUM ALLOWED COST(" + MAX_COST_THINGS + ") line:" + lineNumber);
-						}
-						thingsInLine.add(t);
-					}
-					packagesToPack.add(new PackageInformation(thingsInLine, packageWeight));
+					try {
+						BigDecimal packageWeight = new BigDecimal(packageWeighString);
+						List<Thing> thingsInLine = new ArrayList<>(INITIAL_CAPACITY);
+						for (int i = 2; i < tokens.length; i++) {
+							Thing t = parseThing(tokens[i], filePath, i);
 
-				} catch (NumberFormatException e) {
-					throw new FilePackageReaderException("Error reading the file: " + filePath
-							+ " invalid package weight: " + packageWeighString + " line:" + lineNumber, e);
+							thingsInLine.add(t);
+						}
+						packagesToPack.add(new PackageInformation(thingsInLine, packageWeight));
+
+					} catch (NumberFormatException e) {
+						throw new FilePackageReaderException("Error reading the file: " + filePath
+								+ " invalid package weight: " + packageWeighString + " line:" + lineNumber, e);
+					}
 				}
-
 			}
 
 		} catch (IOException e) {

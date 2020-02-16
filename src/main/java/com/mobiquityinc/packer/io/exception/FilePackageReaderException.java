@@ -1,4 +1,4 @@
-package com.mobiquityinc.packer.reader;
+package com.mobiquityinc.packer.io.exception;
 
 import com.mobiquityinc.exception.APIException;
 
