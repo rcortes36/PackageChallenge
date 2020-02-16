@@ -88,6 +88,7 @@ class PickerTest {
 		thingsList.add(c);
 		thingsList.add(expectedThing);
 		thingsList.add(e);
+		thingsList.add(f);
 
 		Picker picker = new Picker(thingsList, boxCapacity);
 		picker.pack();

@@ -15,7 +15,7 @@ public class Picker {
 	private final Thing thingsArray[];
 	@Getter
 	private List<Thing> selectedThings;
-	private final BigDecimal boxWeightLimit;
+	private final BigDecimal packageWeightLimit;
 	@Getter
 	private BigDecimal calculatedCost;
 	public static Comparator<Thing> COMPARE_THING_BY_VALUE_DESC = ((Thing a, Thing b) -> b.getValue()
@@ -27,7 +27,7 @@ public class Picker {
 		thingsArray = thingsList.stream().filter(thing -> thing.getWeight().compareTo(boxWeightLimit) <= 0)
 				.sorted(COMPARE_THING_BY_VALUE_DESC).toArray(Thing[]::new);
 		this.selectedThings = new LinkedList<>();
-		this.boxWeightLimit = boxWeightLimit;
+		this.packageWeightLimit = boxWeightLimit;
 	}
 
 	public void pack() {
@@ -44,6 +44,8 @@ public class Picker {
 			break;
 		default:
 			this.calculatedCost = packNonTrivial();
+			selectedThings.sort((Thing a, Thing b) -> new Integer(a.getIndexNumber())
+					.compareTo(new Integer(b.getIndexNumber())));
 			break;
 		}
 	}
@@ -75,7 +77,7 @@ public class Picker {
 				includeNode.setBound(calculateMaxNodeProfit(includeNode));
 
 				// Are room for the new group of things and new thing has value?
-				if ((includeNode.getWeight().compareTo(this.boxWeightLimit) <= 0)
+				if ((includeNode.getWeight().compareTo(this.packageWeightLimit) <= 0)
 						&& includeNode.getBound().compareTo(profit) >= 0) {
 					if (profit.compareTo(includeNode.getProfit()) < 0) {
 						profit = includeNode.getProfit();
@@ -102,7 +104,7 @@ public class Picker {
 	}
 
 	private boolean fits(BigDecimal currentWeight, BigDecimal thingWeight) {
-		return this.boxWeightLimit.compareTo(currentWeight.add(thingWeight)) >= 0;
+		return this.packageWeightLimit.compareTo(currentWeight.add(thingWeight)) >= 0;
 
 	}
 
@@ -119,7 +121,7 @@ public class Picker {
 				currentProfit = currentProfit.add(t.getCost());
 			} else {
 				// How much room are
-				BigDecimal remainder = this.boxWeightLimit.subtract(currentWeight);
+				BigDecimal remainder = this.packageWeightLimit.subtract(currentWeight);
 				// Fill the theoretical cost than can be added if the thing were divisible
 				currentProfit = currentProfit.add(remainder.multiply(t.getValue()));
 				// end the loop
