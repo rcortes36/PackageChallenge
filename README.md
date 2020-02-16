@@ -20,7 +20,7 @@ For that reason:<br>
 (4) I preferred short classes with few methods than larger classes with unrelated responsibilities. The responsibility of the class can be inferred from the name or a short comment was added if it was considered necessary<br>
 (5) No special code consideration was taken to be used in a multithreading environment. the entry point or method Packer.pack is static and there are no variables which value can be in a race condition<br>
 (6) I changed the  provided pom.xml file using other plugins than made easier my development and configuring portability <br>
-(7) I used Junit and Hamcrest because of the Collection facilities of Hamcrest and JUnit as the general unit testing framework<br> 
+(7) I used Junit and Hamcrest because of the Collection facilities of Hamcrest and JUnit as the general unit testing framework<br>
 (8) The project can be easily tested using mvn test <br>
 (9) Goals test, compile, and the package was tested and can be used <br>
 (10) The lombok framework was used to improve readability of the code<br>
