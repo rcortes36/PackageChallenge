@@ -1,5 +1,7 @@
 # The Package Challenge
 
+Solution of the Package Challenge by Ricardo Cortes
+
 I was instructed to use code that can be used for production purposes.<br> 
 For that reason:<br>
 (1) I chose to use BigDecimal for Cost as is the type of number that is used money and also for weight to have precision. This is an example of how bad Double and Float can perform for calculations.<br>
