@@ -26,6 +26,6 @@ For that reason:<br>
 (8) The project can be easily tested using mvn test <br>
 (9) Goals test, compile, and the package was tested and can be used <br>
 (10) The lombok framework was used to improve readability of the code<br>
-(11) Original pdf with porblem description is attached to the repository<br>
+(11) Original pdf with problem description is attached to the repository<br>
 (12) This restriction "You would prefer to send a package which weighs less in case there is more than one package with the
 same price." was addreseed using the gready principle to pick the things that have more vaule per weight unit
