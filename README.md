@@ -24,7 +24,7 @@ For that reason:<br>
 (6) I changed the  provided pom.xml file using other plugins than made easier my development and configuring portability <br>
 (7) I used Junit and Hamcrest because of the Collection facilities of Hamcrest and JUnit as the general unit testing framework<br>
 (8) The project can be easily tested using mvn test <br>
-(9) Goals test, compile, and the package was tested and can be used <br>
+(9) Goals test, compile, and the package was tested and can be used. maven 3.3 or higher can be used and also mnvw (maven wrapper) was added<br>
 (10) The lombok framework was used to improve readability of the code<br>
 (11) Original pdf with problem description is attached to the repository<br>
 (12) This restriction "You would prefer to send a package which weighs less in case there is more than one package with the
